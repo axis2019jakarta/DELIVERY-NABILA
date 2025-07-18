@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nabila Logistik and Delivery - Order Cepat Jabodetabek</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS (Styling) -->
+    <style>
+        :root {
+            --primary-color: #FF69B4; /* Hot Pink */
+            --secondary-color: #4A90E2; /* Bright Blue */
+            --dark-color: #333;
+            --light-color: #f4f4f4;
+            --white-color: #fff;
+            --success-color: #28a745;
+            --font-family: 'Poppins', sans-serif;
+        }
+
+        /* Reset & Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 0 20px;
+        }
+
+        /* Marquee Notification Bar */
+        .marquee-container {
+            background-color: var(--dark-color);
+            color: var(--white-color);
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            white-space: nowrap;
+            padding-left: 100%;
+            animation: marquee 45s linear infinite;
+        }
+        
+        .marquee-text span {
+            margin: 0 50px;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Header */
+        header {
+            background: var(--white-color);
+            padding: 20px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 40px; /* Height of marquee bar */
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-links a {
+            color: var(--dark-color);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white-color);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #e0559d;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background: #3a7cc4;
+        }
+
+        /* Main Content - Order Section */
+        main {
+            padding-top: 80px; /* Space for header and marquee */
+            padding-bottom: 40px;
+        }
+
+        .order-section {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 40px;
+            align-items: flex-start;
+            background: var(--white-color);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .order-form-container h2 {
+            margin-bottom: 20px;
+            color: var(--dark-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        #map {
+            height: 550px;
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .service-options {
+            margin-top: 20px;
+        }
+
+        .service-options h3 {
+            margin-bottom: 10px;
+        }
+
+        .service-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .service-btn {
+            padding: 15px 10px;
+            border: 2px solid var(--light-color);
+            border-radius: 8px;
+            background: var(--white-color);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .service-btn.selected {
+            border-color: var(--primary-color);
+            background: #fff5fa;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255,105,180,0.2);
+        }
+
+        .price-calculation {
+            margin-top: 25px;
+            background: #eef7ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--secondary-color);
+        }
+        
+        .price-calculation p {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .price-calculation h3 {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+        }
+        
+        #order-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .order-section {
+                grid-template-columns: 1fr;
+            }
+            #map {
+                height: 400px;
+                order: -1; /* Move map to top on mobile */
+            }
+        }
+        @media (max-width: 768px) {
+            .logo { font-size: 1.5rem; }
+            .nav-links { display: none; } /* Simplicity for mobile */
+            header { top: 35px; } /* Adjust for smaller marquee */
+            .marquee-container { padding: 8px 0; font-size: 0.9rem; }
+            main { padding-top: 60px; }
+            .order-section { padding: 20px; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Notifikasi Berjalan -->
+    <div class="marquee-container">
+        <div class="marquee-text">
+            <span>🎉 Selamat Datang di Nabila Logistik and Delivery! Solusi pengiriman cepat dan terpercaya di Jabodetabek.</span>
+            <span>🏍️ Layanan Tersedia: Same Day, Instant Courier, Food Delivery, dan Jasa Titip (Jastip).</span>
+            <span>💰 Harga mulai dari Rp 2.500/km dengan minimum order. Cek harga langsung di form order!</span>
+            <span>🚚 Ingin bergabung menjadi Driver? Hubungi Admin pendaftaran via WhatsApp: 085810526151. Siapkan SIM & STNK aktif.</span>
+        </div>
+    </div>
+
+    <!-- Header & Navigasi -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">Nabila Logistik</div>
+                <div class="nav-links">
+                    <a href="#order-form">Order Sekarang</a>
+                    <a href="#services">Layanan Kami</a>
+                    <a href="#driver-reg">Jadi Driver</a>
+                </div>
+                <a href="#driver-reg" class="btn-primary btn-secondary">Daftar Driver</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="container">
+        <section class="order-section" id="order-form">
+            <!-- Kolom Kiri: Form Order -->
+            <div class="order-form-container">
+                <h2>Buat Pesanan Baru</h2>
+                <p>Khusus area <strong>JABODETABEK</strong>. Tentukan lokasi jemput dan antar untuk melihat rute dan estimasi harga.</p>
+                <br>
+                <form id="delivery-form">
+                    <div class="form-group">
+                        <label for="pickup">Lokasi Penjemputan</label>
+                        <input type="text" id="pickup" placeholder="Contoh: Stasiun Gambir, Jakarta Pusat">
+                    </div>
+                    <div class="form-group">
+                        <label for="dropoff">Lokasi Pengantaran</label>
+                        <input type="text" id="dropoff" placeholder="Contoh: Mall Botani Square, Bogor">
+                    </div>
+
+                    <div id="services" class="service-options">
+                        <h3>Pilih Jenis Layanan</h3>
+                        <div class="service-buttons">
+                            <button type="button" class="service-btn selected" data-service="Same Day">Same Day</button>
+                            <button type="button" class="service-btn" data-service="Instant">Instant</button>
+                            <button type="button" class="service-btn" data-service="Food">Food</button>
+                            <button type="button" class="service-btn" data-service="Jastip">Jastip</button>
+                        </div>
+                    </div>
+                    
+                    <div class="price-calculation">
+                        <p>Estimasi Jarak: <strong id="distance">0 km</strong></p>
+                        <p>Estimasi Biaya:</p>
+                        <h3 id="price">Rp 0</h3>
+                    </div>
+
+                    <button type="button" id="order-btn" class="btn-primary">Order via WhatsApp</button>
+                </form>
+                 <div id="driver-reg" style="margin-top: 40px; padding-top:20px; border-top: 1px solid #eee;">
+                    <h3>Gabung Jadi Mitra Driver</h3>
+                    <p>Dapatkan penghasilan tambahan dengan menjadi mitra kami. Klik tombol di bawah untuk mendaftar.</p>
+                    <br>
+                    <button id="register-driver-btn" class="btn-primary btn-secondary" style="width: 100%;">Daftar Sekarang</button>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Peta -->
+            <div id="map"></div>
+        </section>
+    </main>
+    
+    <!-- Ganti YOUR_API_KEY dengan API Key Google Maps Anda -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
+
+    <!-- JavaScript untuk Fungsionalitas -->
+    <script>
+        // --- Konfigurasi Awal ---
+        const ADMIN_WHATSAPP_NUMBER = "6285810526151"; // Gunakan format 62, bukan 0
+        const PRICE_PER_KM = 2500; // Harga per kilometer (Rp)
+        const MINIMUM_FEE = 15000; // Biaya minimum (Rp)
+        const JABODETABEK_CENTER = { lat: -6.2088, lng: 106.8456 }; // Titik tengah Jakarta
+
+        // --- Variabel Global ---
+        let map, directionsService, directionsRenderer;
+        let pickupAutocomplete, dropoffAutocomplete;
+        let selectedService = "Same Day";
+        let calculatedDistance = 0;
+        let calculatedPrice = 0;
+
+        // --- Inisialisasi Peta ---
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: JABODETABEK_CENTER,
+                mapTypeControl: false,
+                streetViewControl: false,
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true, // kita akan buat marker sendiri
+                polylineOptions: {
+                    strokeColor: '#FF69B4',
+                    strokeWeight: 5
+                }
+            });
+
+            // Opsi Autocomplete untuk Jabodetabek
+            const jabodetabekBounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(-6.8, 106.3),
+                new google.maps.LatLng(-5.9, 107.2)
+            );
+            const autocompleteOptions = {
+                bounds: jabodetabekBounds,
+                componentRestrictions: { country: "id" },
+                strictBounds: false,
+            };
+            
+            const pickupInput = document.getElementById("pickup");
+            const dropoffInput = document.getElementById("dropoff");
+            
+            pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, autocompleteOptions);
+            dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, autocompleteOptions);
+
+            pickupAutocomplete.addListener('place_changed', calculateAndDisplayRoute);
+            dropoffAutocomplete.addListener('place_changed', calculateAndDisplayRoute);
+        }
+
+        // --- Fungsi Kalkulasi Rute dan Harga ---
+        function calculateAndDisplayRoute() {
+            const origin = document.getElementById("pickup").value;
+            const destination = document.getElementById("dropoff").value;
+
+            if (origin && destination) {
+                directionsService.route(
+                    {
+                        origin: origin,
+                        destination: destination,
+                        travelMode: google.maps.TravelMode.DRIVING,
+                    },
+                    (response, status) => {
+                        if (status === "OK") {
+                            directionsRenderer.setDirections(response);
+                            const route = response.routes[0].legs[0];
+                            
+                            // Update Jarak
+                            calculatedDistance = (route.distance.value / 1000).toFixed(1); // dalam km
+                            document.getElementById("distance").innerText = `${calculatedDistance} km`;
+                            
+                            // Update Harga
+                            let price = calculatedDistance * PRICE_PER_KM;
+                            if (price < MINIMUM_FEE) {
+                                price = MINIMUM_FEE;
+                            }
+                            calculatedPrice = Math.ceil(price / 1000) * 1000; // Pembulatan ke ribuan atas
+                            
+                            document.getElementById("price").innerText = `Rp ${calculatedPrice.toLocaleString('id-ID')}`;
+                            
+                        } else {
+                            window.alert("Rute tidak ditemukan. Pastikan alamat benar dan berada di area layanan.");
+                        }
+                    }
+                );
+            }
+        }
+        
+        // --- Event Listener untuk Tombol Layanan ---
+        const serviceButtons = document.querySelectorAll('.service-btn');
+        serviceButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                serviceButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                selectedService = button.getAttribute('data-service');
+            });
+        });
+
+        // --- Event Listener untuk Tombol Order via WhatsApp ---
+        document.getElementById('order-btn').addEventListener('click', () => {
+            const pickupLocation = document.getElementById('pickup').value;
+            const dropoffLocation = document.getElementById('dropoff').value;
+
+            if (!pickupLocation || !dropoffLocation || calculatedPrice === 0) {
+                alert("Harap isi lokasi penjemputan, pengantaran, dan pastikan harga sudah terkalkulasi.");
+                return;
+            }
+
+            const message = `
+*--- PESANAN BARU ---*
+*Nabila Logistik & Delivery*
+
+*Layanan:* ${selectedService}
+*Lokasi Jemput:* ${pickupLocation}
+*Lokasi Antar:* ${dropoffLocation}
+*Estimasi Jarak:* ${calculatedDistance} km
+*Estimasi Biaya:* Rp ${calculatedPrice.toLocaleString('id-ID')}
+
+Halo Admin, saya ingin melakukan pesanan sesuai detail di atas. Mohon konfirmasinya. Terima kasih.
+            `;
+            
+            const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+        });
+        
+        // --- Event Listener untuk Tombol Daftar Driver ---
+        document.getElementById('register-driver-btn').addEventListener('click', () => {
+            const message = `
+Halo Admin Nabila Logistik,
+
+Saya tertarik untuk bergabung menjadi mitra driver. Mohon informasinya mengenai langkah-langkah pendaftaran selanjutnya.
+
+Terima kasih.
+            `;
+            const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+        });
+
+    </script>
+</body>
+</html>
