@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Leaflet CSS (untuk OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
     <!-- CSS (Styling) -->
     <style>
         :root {
@@ -91,6 +94,14 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo .logo-icon {
+             width: 40px;
+             height: 40px;
         }
 
         .nav-links a {
@@ -146,12 +157,19 @@
         }
 
         .order-form-container h2 {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: var(--dark-color);
+        }
+        
+        .courier-image {
+            display: block;
+            max-width: 150px;
+            margin: 0 auto 20px auto;
         }
 
         .form-group {
             margin-bottom: 15px;
+            position: relative;
         }
 
         .form-group label {
@@ -173,11 +191,33 @@
             border-color: var(--primary-color);
         }
         
+        .autocomplete-results {
+            position: absolute;
+            background: var(--white-color);
+            width: 100%;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            z-index: 999;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        .autocomplete-item:hover {
+            background: var(--light-color);
+        }
+
         #map {
             height: 550px;
             width: 100%;
             border-radius: 10px;
             border: 1px solid #ddd;
+            background-color: #eee; /* Placeholder color */
         }
         
         .service-options {
@@ -275,7 +315,11 @@
     <header>
         <div class="container">
             <nav>
-                <div class="logo">Nabila Logistik</div>
+                <div class="logo">
+                     <!-- Logo Motor SVG -->
+                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#FF69B4" d="M128 448c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zm288 0c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zM320 256c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32zm-64-64c17.7 0 32-14.3 32-32s-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32zm128-64c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zM22.2 134.1c-3.4-10.3-1.6-21.6 4.9-30.6S43.1 88 54.3 88H152c11.1 0 21.4 6.6 26.8 16.9l43.2 82.3c10.2 19.5 31.3 30.8 53.9 30.8H352c17.7 0 32 14.3 32 32s-14.3 32-32 32H276c-22.6 0-43.7-11.3-53.9-30.8l-23.3-44.3-35.9 76.2c-5.4 11.5-16.5 18.9-28.8 18.9H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h32.2l20.4-43.4-34-17c-11.6-5.8-18.6-18.1-18.4-31.1z"/></svg>
+                    Nabila Logistik
+                </div>
                 <div class="nav-links">
                     <a href="#order-form">Order Sekarang</a>
                     <a href="#services">Layanan Kami</a>
@@ -291,17 +335,21 @@
         <section class="order-section" id="order-form">
             <!-- Kolom Kiri: Form Order -->
             <div class="order-form-container">
+                 <!-- Gambar Kurir -->
+                <img src="https://i.ibb.co/9vjX62x/courier-professional.png" alt="Kurir Nabila Logistik" class="courier-image"/>
                 <h2>Buat Pesanan Baru</h2>
                 <p>Khusus area <strong>JABODETABEK</strong>. Tentukan lokasi jemput dan antar untuk melihat rute dan estimasi harga.</p>
                 <br>
-                <form id="delivery-form">
+                <form id="delivery-form" autocomplete="off">
                     <div class="form-group">
                         <label for="pickup">Lokasi Penjemputan</label>
                         <input type="text" id="pickup" placeholder="Contoh: Stasiun Gambir, Jakarta Pusat">
+                        <div class="autocomplete-results" id="pickup-results"></div>
                     </div>
                     <div class="form-group">
                         <label for="dropoff">Lokasi Pengantaran</label>
                         <input type="text" id="dropoff" placeholder="Contoh: Mall Botani Square, Bogor">
+                         <div class="autocomplete-results" id="dropoff-results"></div>
                     </div>
 
                     <div id="services" class="service-options">
@@ -335,123 +383,237 @@
         </section>
     </main>
     
-    <!-- Ganti YOUR_API_KEY dengan API Key Google Maps Anda -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places,geometry&callback=initMap" async defer></script>
-
+    <!-- Leaflet JS (untuk OpenStreetMap) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
     <!-- JavaScript untuk Fungsionalitas -->
     <script>
         // --- Konfigurasi Awal ---
+        // ! PENTING: Ganti dengan API Key OpenRouteService Anda
+        const ORS_API_KEY = "MASUKKAN_API_KEY_ORS_ANDA_DI_SINI";
+        
         const ADMIN_WHATSAPP_NUMBER = "6285810526151"; // Gunakan format 62, bukan 0
         const PRICE_PER_KM = 2500; // Harga per kilometer (Rp)
         const MINIMUM_FEE = 15000; // Biaya minimum (Rp)
-        const JABODETABEK_CENTER = { lat: -6.2088, lng: 106.8456 }; // Titik tengah Jakarta
+        const JABODETABEK_CENTER = [-6.2088, 106.8456]; // [lat, lng]
 
         // --- Variabel Global ---
-        let map, directionsService, directionsRenderer;
-        let pickupAutocomplete, dropoffAutocomplete;
+        let map;
+        let pickupMarker, dropoffMarker;
+        let routeLayer;
+        let pickupCoords, dropoffCoords;
         let selectedService = "Same Day";
         let calculatedDistance = 0;
         let calculatedPrice = 0;
+        let debounceTimer;
 
-        // --- Inisialisasi Peta ---
+        // --- Inisialisasi Peta Leaflet ---
         function initMap() {
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 10,
-                center: JABODETABEK_CENTER,
-                mapTypeControl: false,
-                streetViewControl: false,
-            });
+            map = L.map('map').setView(JABODETABEK_CENTER, 10);
 
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: map,
-                suppressMarkers: true, // kita akan buat marker sendiri
-                polylineOptions: {
-                    strokeColor: '#FF69B4',
-                    strokeWeight: 5
-                }
-            });
-
-            // Opsi Autocomplete untuk Jabodetabek
-            const jabodetabekBounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(-6.8, 106.3),
-                new google.maps.LatLng(-5.9, 107.2)
-            );
-            const autocompleteOptions = {
-                bounds: jabodetabekBounds,
-                componentRestrictions: { country: "id" },
-                strictBounds: false,
-            };
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
             
-            const pickupInput = document.getElementById("pickup");
-            const dropoffInput = document.getElementById("dropoff");
-            
-            pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, autocompleteOptions);
-            dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, autocompleteOptions);
-
-            pickupAutocomplete.addListener('place_changed', calculateAndDisplayRoute);
-            dropoffAutocomplete.addListener('place_changed', calculateAndDisplayRoute);
+            // Layer untuk menampung rute
+            routeLayer = L.layerGroup().addTo(map);
         }
 
-        // --- Fungsi Kalkulasi Rute dan Harga ---
-        function calculateAndDisplayRoute() {
-            const origin = document.getElementById("pickup").value;
-            const destination = document.getElementById("dropoff").value;
+        // --- Ikon Kustom untuk Marker di Peta ---
+        const courierIcon = L.icon({
+            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwNzBmMCIgd2lkdGg9IjQ4cHgiIGhlaWdodD0iNDhweCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xOSAxM2gtMXYtMmgtMnYySDhhMiAyIDAgMCAwLTIgMiAyIDIgMCAwIDAgMiAyaDEwYTIgMiAwIDAgMCAyLTJ2LTJ6bS04LjUgM2ExLjUgMS41IDAgMSAxIDAgMyAxLjUgMS41IDAgMCAxIDAtM3ptNiAwYTEuNSAxLjUgMCAxIDEgMCAzIDEuNSAxLjUgMCAwIDEgMC0zem0tMy41LTdoMS4yN2wtMS40My00LjExYy0uMzUtMS0xLjMtMS42OS0yLjM0LTEuNjloLTIuMjljLTEuMTIgMC0yLjE4LjgtMi40OCAxLjg4bC0uODggMy4xM0g0di0ySDJ2MmMwIDEuMS45IDIgMiAyaDF2MWMyLjkyIDAgNS40NS0xLjY0IDYuODUtNC4xNEwxMy4xMiA5SDIxdjJoLTl6Ii8+PC9zdmc+',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+            popupAnchor: [0, -40]
+        });
+        
+        // --- Fungsi untuk mencari alamat (Autocomplete) ---
+        async function searchAddress(query, resultsContainerId) {
+            const resultsContainer = document.getElementById(resultsContainerId);
+            if (query.length < 3) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.style.display = 'none';
+                return;
+            }
+            if (ORS_API_KEY === "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1MGZhMjk5OTc1NjQxYzViMmYxMTI4OTMzZjc3NWE4IiwiaCI6Im11cm11cjY0In0=") {
+                 console.error("API Key OpenRouteService belum dimasukkan.");
+                 resultsContainer.innerHTML = '<div class="autocomplete-item">Error: API Key belum diatur.</div>';
+                 resultsContainer.style.display = 'block';
+                 return;
+            }
 
-            if (origin && destination) {
-                directionsService.route(
-                    {
-                        origin: origin,
-                        destination: destination,
-                        travelMode: google.maps.TravelMode.DRIVING,
-                    },
-                    (response, status) => {
-                        if (status === "OK") {
-                            directionsRenderer.setDirections(response);
-                            const route = response.routes[0].legs[0];
-                            
-                            // Update Jarak
-                            calculatedDistance = (route.distance.value / 1000).toFixed(1); // dalam km
-                            document.getElementById("distance").innerText = `${calculatedDistance} km`;
-                            
-                            // Update Harga
-                            let price = calculatedDistance * PRICE_PER_KM;
-                            if (price < MINIMUM_FEE) {
-                                price = MINIMUM_FEE;
-                            }
-                            calculatedPrice = Math.ceil(price / 1000) * 1000; // Pembulatan ke ribuan atas
-                            
-                            document.getElementById("price").innerText = `Rp ${calculatedPrice.toLocaleString('id-ID')}`;
-                            
-                        } else {
-                            window.alert("Rute tidak ditemukan. Pastikan alamat benar dan berada di area layanan.");
-                        }
-                    }
-                );
+            // Batas area pencarian di sekitar Jabodetabek
+            const focusPoint = { lon: JABODETABEK_CENTER[1], lat: JABODETABEK_CENTER[0] };
+            const boundary = {
+                lon_min: 106.3, lat_min: -6.8,
+                lon_max: 107.2, lat_max: -5.9
+            };
+            
+            const url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&focus.point.lon=${focusPoint.lon}&focus.point.lat=${focusPoint.lat}&boundary.rect.min_lon=${boundary.lon_min}&boundary.rect.min_lat=${boundary.lat_min}&boundary.rect.max_lon=${boundary.lon_max}&boundary.rect.max_lat=${boundary.lat_max}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                resultsContainer.innerHTML = '';
+                if (data.features && data.features.length > 0) {
+                    data.features.forEach(feature => {
+                        const item = document.createElement('div');
+                        item.classList.add('autocomplete-item');
+                        item.innerText = feature.properties.label;
+                        item.onclick = () => selectAddress(feature, resultsContainerId);
+                        resultsContainer.appendChild(item);
+                    });
+                    resultsContainer.style.display = 'block';
+                } else {
+                    resultsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error fetching address:', error);
+                resultsContainer.style.display = 'none';
             }
         }
         
-        // --- Event Listener untuk Tombol Layanan ---
-        const serviceButtons = document.querySelectorAll('.service-btn');
-        serviceButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                serviceButtons.forEach(btn => btn.classList.remove('selected'));
-                button.classList.add('selected');
-                selectedService = button.getAttribute('data-service');
-            });
-        });
-
-        // --- Event Listener untuk Tombol Order via WhatsApp ---
-        document.getElementById('order-btn').addEventListener('click', () => {
-            const pickupLocation = document.getElementById('pickup').value;
-            const dropoffLocation = document.getElementById('dropoff').value;
-
-            if (!pickupLocation || !dropoffLocation || calculatedPrice === 0) {
-                alert("Harap isi lokasi penjemputan, pengantaran, dan pastikan harga sudah terkalkulasi.");
-                return;
+        // --- Fungsi saat alamat dipilih dari daftar ---
+        function selectAddress(feature, resultsContainerId) {
+            const coords = feature.geometry.coordinates; // [lng, lat]
+            const latLng = [coords[1], coords[0]]; // Leaflet uses [lat, lng]
+            
+            if (resultsContainerId === 'pickup-results') {
+                document.getElementById('pickup').value = feature.properties.label;
+                pickupCoords = coords; // [lng, lat]
+                if (pickupMarker) {
+                    pickupMarker.setLatLng(latLng);
+                } else {
+                    pickupMarker = L.marker(latLng, { icon: courierIcon }).addTo(map).bindPopup("<b>Lokasi Jemput</b>");
+                }
+                map.panTo(latLng);
+            } else {
+                document.getElementById('dropoff').value = feature.properties.label;
+                dropoffCoords = coords; // [lng, lat]
+                 if (dropoffMarker) {
+                    dropoffMarker.setLatLng(latLng);
+                } else {
+                    dropoffMarker = L.marker(latLng, { icon: courierIcon }).addTo(map).bindPopup("<b>Lokasi Antar</b>");
+                }
+                map.panTo(latLng);
             }
+            
+            document.getElementById(resultsContainerId).innerHTML = '';
+            document.getElementById(resultsContainerId).style.display = 'none';
+            
+            if (pickupCoords && dropoffCoords) {
+                calculateAndDisplayRoute();
+            }
+        }
 
-            const message = `
+        // --- Fungsi Kalkulasi Rute dan Harga ---
+        async function calculateAndDisplayRoute() {
+            if (!pickupCoords || !dropoffCoords) return;
+
+            const url = 'https://api.openrouteservice.org/v2/directions/driving-car/geojson';
+            const body = {
+                "coordinates": [pickupCoords, dropoffCoords]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+                        'Content-Type': 'application/json',
+                        'Authorization': ORS_API_KEY
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (data.features && data.features.length > 0) {
+                    const route = data.features[0];
+                    const summary = route.properties.summary;
+                    
+                    // Hapus rute lama
+                    routeLayer.clearLayers();
+                    
+                    // Tampilkan rute baru di peta
+                    const routeLine = L.geoJSON(route, {
+                        style: {
+                            color: '#FF69B4',
+                            weight: 5
+                        }
+                    }).addTo(routeLayer);
+
+                    map.fitBounds(routeLine.getBounds());
+
+                    // Update Jarak (summary.distance dalam meter)
+                    calculatedDistance = (summary.distance / 1000).toFixed(1);
+                    document.getElementById("distance").innerText = `${calculatedDistance} km`;
+                    
+                    // Update Harga
+                    let price = calculatedDistance * PRICE_PER_KM;
+                    if (price < MINIMUM_FEE) {
+                        price = MINIMUM_FEE;
+                    }
+                    calculatedPrice = Math.ceil(price / 1000) * 1000;
+                    
+                    document.getElementById("price").innerText = `Rp ${calculatedPrice.toLocaleString('id-ID')}`;
+                } else {
+                     window.alert("Rute tidak ditemukan. Pastikan alamat benar dan berada di area layanan.");
+                }
+
+            } catch (error) {
+                console.error("Error calculating route:", error);
+                window.alert("Terjadi kesalahan saat menghitung rute.");
+            }
+        }
+        
+        // --- Event Listener ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            
+            const pickupInput = document.getElementById('pickup');
+            const dropoffInput = document.getElementById('dropoff');
+
+            pickupInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => searchAddress(pickupInput.value, 'pickup-results'), 500);
+            });
+            
+            dropoffInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => searchAddress(dropoffInput.value, 'dropoff-results'), 500);
+            });
+            
+            // Klik di luar input untuk menyembunyikan hasil autocomplete
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.form-group')) {
+                    document.getElementById('pickup-results').style.display = 'none';
+                    document.getElementById('dropoff-results').style.display = 'none';
+                }
+            });
+
+            // Tombol Layanan
+            const serviceButtons = document.querySelectorAll('.service-btn');
+            serviceButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    serviceButtons.forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    selectedService = button.getAttribute('data-service');
+                });
+            });
+
+            // Tombol Order via WhatsApp
+            document.getElementById('order-btn').addEventListener('click', () => {
+                const pickupLocation = document.getElementById('pickup').value;
+                const dropoffLocation = document.getElementById('dropoff').value;
+
+                if (!pickupLocation || !dropoffLocation || calculatedPrice === 0) {
+                    alert("Harap isi lokasi penjemputan, pengantaran, dan pastikan harga sudah terkalkulasi.");
+                    return;
+                }
+
+                const message = `
 *--- PESANAN BARU ---*
 *Nabila Logistik & Delivery*
 
@@ -462,23 +624,24 @@
 *Estimasi Biaya:* Rp ${calculatedPrice.toLocaleString('id-ID')}
 
 Halo Admin, saya ingin melakukan pesanan sesuai detail di atas. Mohon konfirmasinya. Terima kasih.
-            `;
-            
-            const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappURL, '_blank');
-        });
-        
-        // --- Event Listener untuk Tombol Daftar Driver ---
-        document.getElementById('register-driver-btn').addEventListener('click', () => {
-            const message = `
+                `;
+                
+                const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message.trim())}`;
+                window.open(whatsappURL, '_blank');
+            });
+
+            // Tombol Daftar Driver
+            document.getElementById('register-driver-btn').addEventListener('click', () => {
+                const message = `
 Halo Admin Nabila Logistik,
 
 Saya tertarik untuk bergabung menjadi mitra driver. Mohon informasinya mengenai langkah-langkah pendaftaran selanjutnya.
 
 Terima kasih.
-            `;
-            const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-            window.open(whatsappURL, '_blank');
+                `;
+                const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message.trim())}`;
+                window.open(whatsappURL, '_blank');
+            });
         });
 
     </script>
