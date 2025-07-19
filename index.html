@@ -3,646 +3,504 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nabila Logistik and Delivery - Order Cepat Jabodetabek</title>
+    <title>Platform Nabila Logistik (Supabase Backend)</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <!-- Leaflet CSS (untuk OpenStreetMap) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- CSS (Styling) -->
     <style>
         :root {
-            --primary-color: #FF69B4; /* Hot Pink */
-            --secondary-color: #4A90E2; /* Bright Blue */
-            --dark-color: #333;
-            --light-color: #f4f4f4;
-            --white-color: #fff;
-            --success-color: #28a745;
-            --font-family: 'Poppins', sans-serif;
+            --primary-color: #FF69B4; --secondary-color: #4A90E2; --dark-color: #333;
+            --light-color: #f4f4f4; --white-color: #fff; --success-color: #28a745;
+            --danger-color: #dc3545; --warning-color: #ffc107; --font-family: 'Poppins', sans-serif;
         }
-
-        /* Reset & Global Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--light-color);
-            color: var(--dark-color);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-            padding: 0 20px;
-        }
-
-        /* Marquee Notification Bar */
-        .marquee-container {
-            background-color: var(--dark-color);
-            color: var(--white-color);
-            padding: 10px 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1001;
-            overflow: hidden;
-        }
-
-        .marquee-text {
-            display: inline-block;
-            white-space: nowrap;
-            padding-left: 100%;
-            animation: marquee 45s linear infinite;
-        }
-        
-        .marquee-text span {
-            margin: 0 50px;
-        }
-
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-
-        /* Header */
-        header {
-            background: var(--white-color);
-            padding: 20px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 40px; /* Height of marquee bar */
-            z-index: 1000;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo .logo-icon {
-             width: 40px;
-             height: 40px;
-        }
-
-        .nav-links a {
-            color: var(--dark-color);
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary-color);
-        }
-
-        .btn-primary {
-            background: var(--primary-color);
-            color: var(--white-color);
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-primary:hover {
-            background: #e0559d;
-        }
-        
-        .btn-secondary {
-            background: var(--secondary-color);
-        }
-        .btn-secondary:hover {
-            background: #3a7cc4;
-        }
-
-        /* Main Content - Order Section */
-        main {
-            padding-top: 80px; /* Space for header and marquee */
-            padding-bottom: 40px;
-        }
-
-        .order-section {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr;
-            gap: 40px;
-            align-items: flex-start;
-            background: var(--white-color);
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .order-form-container h2 {
-            margin-bottom: 10px;
-            color: var(--dark-color);
-        }
-        
-        .courier-image {
-            display: block;
-            max-width: 150px;
-            margin: 0 auto 20px auto;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        
-        .autocomplete-results {
-            position: absolute;
-            background: var(--white-color);
-            width: 100%;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-            z-index: 999;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .autocomplete-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-        
-        .autocomplete-item:hover {
-            background: var(--light-color);
-        }
-
-        #map {
-            height: 550px;
-            width: 100%;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            background-color: #eee; /* Placeholder color */
-        }
-        
-        .service-options {
-            margin-top: 20px;
-        }
-
-        .service-options h3 {
-            margin-bottom: 10px;
-        }
-
-        .service-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .service-btn {
-            padding: 15px 10px;
-            border: 2px solid var(--light-color);
-            border-radius: 8px;
-            background: var(--white-color);
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .service-btn.selected {
-            border-color: var(--primary-color);
-            background: #fff5fa;
-            color: var(--primary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(255,105,180,0.2);
-        }
-
-        .price-calculation {
-            margin-top: 25px;
-            background: #eef7ff;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid var(--secondary-color);
-        }
-        
-        .price-calculation p {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-        }
-
-        .price-calculation h3 {
-            font-size: 1.8rem;
-            color: var(--secondary-color);
-        }
-        
-        #order-btn {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2rem;
-            margin-top: 20px;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 992px) {
-            .order-section {
-                grid-template-columns: 1fr;
-            }
-            #map {
-                height: 400px;
-                order: -1; /* Move map to top on mobile */
-            }
-        }
-        @media (max-width: 768px) {
-            .logo { font-size: 1.5rem; }
-            .nav-links { display: none; } /* Simplicity for mobile */
-            header { top: 35px; } /* Adjust for smaller marquee */
-            .marquee-container { padding: 8px 0; font-size: 0.9rem; }
-            main { padding-top: 60px; }
-            .order-section { padding: 20px; }
-        }
-
+        body { font-family: var(--font-family); background-color: #e9ebee; color: var(--dark-color); line-height: 1.6; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+        .platform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .platform-module { background: var(--white-color); border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 25px; }
+        .platform-module h2 { font-size: 1.5rem; border-bottom: 2px solid var(--light-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; text-align: center; width: 100%; font-size: 1rem; }
+        .btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        .btn-primary { background: var(--primary-color); color: white; } .btn-primary:hover:not(:disabled) { background: #e0559d; }
+        .btn-secondary { background: var(--secondary-color); color: white; } .btn-secondary:hover:not(:disabled) { background: #3a7cc4; }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+        .order-card, .driver-card { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .status { font-weight: bold; padding: 3px 8px; border-radius: 5px; color: white; font-size: 0.8rem; display: inline-block; }
+        .status-searching_driver { background: var(--warning-color); }
+        .status-assigned { background: var(--secondary-color); }
+        .status-pickup { background: #fd7e14; }
+        .status-delivering { background: #0dcaf0; }
+        .status-completed { background: var(--success-color); }
+        .status-pending { background: var(--danger-color); }
+        .status-active { background: var(--success-color); }
+        #map { height: 350px; width: 100%; border-radius: 8px; margin-top: 20px; background-color: #eee; }
+        .loading { text-align: center; padding: 20px; font-style: italic; color: #888; }
+        #config-alert { background: #fff3cd; color: #664d03; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        @media (max-width: 1200px) { .platform-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .platform-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-    <!-- Notifikasi Berjalan -->
-    <div class="marquee-container">
-        <div class="marquee-text">
-            <span>🎉 Selamat Datang di Nabila Logistik and Delivery! Solusi pengiriman cepat dan terpercaya di Jabodetabek.</span>
-            <span>🏍️ Layanan Tersedia: Same Day, Instant Courier, Food Delivery, dan Jasa Titip (Jastip).</span>
-            <span>💰 Harga mulai dari Rp 2.500/km dengan minimum order. Cek harga langsung di form order!</span>
-            <span>🚚 Ingin bergabung menjadi Driver? Hubungi Admin pendaftaran via WhatsApp: 085810526151. Siapkan SIM & STNK aktif.</span>
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h1>Nabila Logistik - Platform Management (Live Backend)</h1>
+        </div>
+
+        <div id="config-alert">
+            <strong>PENTING:</strong> Pastikan Anda telah memasukkan URL Supabase, Kunci Anon, dan Kunci API OpenRouteService di dalam tag <script> di bawah.
+        </div>
+
+        <div class="platform-grid">
+            <!-- MODULE 1: PELANGGAN (Simulasi sebagai user 'pelanggan@email.com') -->
+            <div class="platform-module">
+                <h2>👤 Panel Pelanggan</h2>
+                <div id="customer-profile" class="loading">Memuat profil...</div>
+                <hr style="margin: 20px 0;">
+                <h4>Buat Pesanan Baru</h4>
+                <div class="form-group">
+                    <label for="pickup">Lokasi Jemput</label>
+                    <input type="text" id="pickup" placeholder="Ketik alamat jemput">
+                </div>
+                <div class="form-group">
+                    <label for="dropoff">Lokasi Antar</label>
+                    <input type="text" id="dropoff" placeholder="Ketik alamat antar">
+                </div>
+                <button id="calculate-btn" class="btn btn-secondary">Hitung Biaya</button>
+                <div id="price-display" style="display: none; margin-top: 15px; text-align: center;">
+                    <p>Estimasi Jarak: <strong id="distance">0 km</strong></p>
+                    <h3>Biaya: <strong id="price">Rp 0</strong></h3>
+                </div>
+                <button id="order-btn" class="btn btn-primary" style="margin-top: 15px;" disabled>Order Sekarang</button>
+            </div>
+
+            <!-- MODULE 2: ADMIN (Simulasi sebagai user 'admin@email.com') -->
+            <div class="platform-module">
+                <h2>👑 Dashboard Admin</h2>
+                <h4>Driver Terdaftar</h4>
+                <div id="admin-driver-list" class="loading">Memuat driver...</div>
+                <hr style="margin: 20px 0;">
+                <h4>Order Masuk (Realtime)</h4>
+                <div id="admin-order-list" class="loading">Menunggu order...</div>
+            </div>
+
+            <!-- MODULE 3: DRIVER (Pilih driver untuk melihat panelnya) -->
+            <div class="platform-module">
+                <h2>🏍️ Panel Driver</h2>
+                <div class="form-group">
+                    <label for="driver-selector">Pilih Akun Driver</label>
+                    <select id="driver-selector" onchange="renderDriverPanel(this.value)"></select>
+                </div>
+                <div id="driver-profile-view"></div>
+                <hr style="margin: 20px 0;">
+                <h4>Tugas Untuk Anda (Realtime)</h4>
+                <div id="driver-task-list"></div>
+            </div>
+        </div>
+        
+        <div class="platform-module" style="margin-top:25px;">
+            <h2>🗺️ Peta Pelacakan</h2>
+            <div id="map"></div>
         </div>
     </div>
 
-    <!-- Header & Navigasi -->
-    <header>
-        <div class="container">
-            <nav>
-                <div class="logo">
-                     <!-- Logo Motor SVG -->
-                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#FF69B4" d="M128 448c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zm288 0c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zM320 256c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32zm-64-64c17.7 0 32-14.3 32-32s-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32zm128-64c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32zM22.2 134.1c-3.4-10.3-1.6-21.6 4.9-30.6S43.1 88 54.3 88H152c11.1 0 21.4 6.6 26.8 16.9l43.2 82.3c10.2 19.5 31.3 30.8 53.9 30.8H352c17.7 0 32 14.3 32 32s-14.3 32-32 32H276c-22.6 0-43.7-11.3-53.9-30.8l-23.3-44.3-35.9 76.2c-5.4 11.5-16.5 18.9-28.8 18.9H64c-17.7 0-32-14.3-32-32s14.3-32 32-32h32.2l20.4-43.4-34-17c-11.6-5.8-18.6-18.1-18.4-31.1z"/></svg>
-                    Nabila Logistik
-                </div>
-                <div class="nav-links">
-                    <a href="#order-form">Order Sekarang</a>
-                    <a href="#services">Layanan Kami</a>
-                    <a href="#driver-reg">Jadi Driver</a>
-                </div>
-                <a href="#driver-reg" class="btn-primary btn-secondary">Daftar Driver</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Konten Utama -->
-    <main class="container">
-        <section class="order-section" id="order-form">
-            <!-- Kolom Kiri: Form Order -->
-            <div class="order-form-container">
-                 <!-- Gambar Kurir -->
-                <img src="https://i.ibb.co/9vjX62x/courier-professional.png" alt="Kurir Nabila Logistik" class="courier-image"/>
-                <h2>Buat Pesanan Baru</h2>
-                <p>Khusus area <strong>JABODETABEK</strong>. Tentukan lokasi jemput dan antar untuk melihat rute dan estimasi harga.</p>
-                <br>
-                <form id="delivery-form" autocomplete="off">
-                    <div class="form-group">
-                        <label for="pickup">Lokasi Penjemputan</label>
-                        <input type="text" id="pickup" placeholder="Contoh: Stasiun Gambir, Jakarta Pusat">
-                        <div class="autocomplete-results" id="pickup-results"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="dropoff">Lokasi Pengantaran</label>
-                        <input type="text" id="dropoff" placeholder="Contoh: Mall Botani Square, Bogor">
-                         <div class="autocomplete-results" id="dropoff-results"></div>
-                    </div>
-
-                    <div id="services" class="service-options">
-                        <h3>Pilih Jenis Layanan</h3>
-                        <div class="service-buttons">
-                            <button type="button" class="service-btn selected" data-service="Same Day">Same Day</button>
-                            <button type="button" class="service-btn" data-service="Instant">Instant</button>
-                            <button type="button" class="service-btn" data-service="Food">Food</button>
-                            <button type="button" class="service-btn" data-service="Jastip">Jastip</button>
-                        </div>
-                    </div>
-                    
-                    <div class="price-calculation">
-                        <p>Estimasi Jarak: <strong id="distance">0 km</strong></p>
-                        <p>Estimasi Biaya:</p>
-                        <h3 id="price">Rp 0</h3>
-                    </div>
-
-                    <button type="button" id="order-btn" class="btn-primary">Order via WhatsApp</button>
-                </form>
-                 <div id="driver-reg" style="margin-top: 40px; padding-top:20px; border-top: 1px solid #eee;">
-                    <h3>Gabung Jadi Mitra Driver</h3>
-                    <p>Dapatkan penghasilan tambahan dengan menjadi mitra kami. Klik tombol di bawah untuk mendaftar.</p>
-                    <br>
-                    <button id="register-driver-btn" class="btn-primary btn-secondary" style="width: 100%;">Daftar Sekarang</button>
-                </div>
-            </div>
-
-            <!-- Kolom Kanan: Peta -->
-            <div id="map"></div>
-        </section>
-    </main>
-    
-    <!-- Leaflet JS (untuk OpenStreetMap) -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- JavaScript untuk Fungsionalitas -->
     <script>
-        // --- Konfigurasi Awal ---
-        // ! PENTING: Ganti dengan API Key OpenRouteService Anda
-        const ORS_API_KEY = "MASUKKAN_API_KEY_ORS_ANDA_DI_SINI";
+    // ===================================================================================
+    // BAGIAN 1: KONFIGURASI & KONEKSI SUPABASE
+    // INI ADALAH BAGIAN PALING PENTING. JANGAN LEWATKAN!
+    // ===================================================================================
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ MASUKKAN KUNCI API ANDA DI SINI ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    const SUPABASE_URL = 'https://itwrzihipeaimcqcqlpz.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0d3J6aWhpcGVhaW1jcWNxbHB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIxNDU0NzcsImV4cCI6MjA2NzcyMTQ3N30.xNsJ5PB5W-GsUuqXBJ8AL7c8M2ndPsCvKOUGeAUqLs0'; 
+    const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1MGZhMjk5OTc1NjQxYzViMmYxMTI4OTMzZjc3NWE4IiwiaCI6Im11cm11cjY0In0=';
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+    const JABODETABEK_CENTER = [-6.2088, 106.8456];
+    
+    // Inisialisasi Klien Supabase
+    let supabase;
+    if (SUPABASE_URL.includes('URL_PROYEK') || SUPABASE_ANON_KEY.includes('KUNCI_ANON')) {
+        document.getElementById('config-alert').innerHTML = '<strong>KESALAHAN:</strong> Anda belum memasukkan URL dan Kunci Anon Supabase. Harap edit file ini.';
+    } else {
+        document.getElementById('config-alert').style.display = 'none';
+        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    
+    // ===================================================================================
+    // BAGIAN 2: STATE MANAGEMENT & DATA LOKAL
+    // ===================================================================================
+    let localState = {
+        orders: [],
+        drivers: [],
+        customerProfile: null,
+        // Untuk simulasi login, kita tentukan UUID user secara manual.
+        // Di aplikasi nyata, ini didapat dari `supabase.auth.getUser()`
+        // Anda bisa mendapatkan UUID ini dari tabel `auth.users` di Supabase setelah mendaftar.
+        SIMULATED_CUSTOMER_ID: 'UUID_USER_PELANGGAN_ANDA', // Ganti dengan UUID user pelanggan
+    };
+
+    let calculatedRoute = null; // Menyimpan hasil perhitungan rute terakhir
+    let map, mapMarkers = {}, mapRoutes = {};
+
+
+    // ===================================================================================
+    // BAGIAN 3: FUNGSI UTAMA (FETCH, RENDER, REALTIME)
+    // ===================================================================================
+    
+    /**
+     * Mengambil semua data awal dari Supabase
+     */
+    async function initializeApp() {
+        if (!supabase) return;
+
+        await Promise.all([
+            fetchCustomerProfile(),
+            fetchDrivers(),
+            fetchOrders()
+        ]);
         
-        const ADMIN_WHATSAPP_NUMBER = "6285810526151"; // Gunakan format 62, bukan 0
-        const PRICE_PER_KM = 2500; // Harga per kilometer (Rp)
-        const MINIMUM_FEE = 15000; // Biaya minimum (Rp)
-        const JABODETABEK_CENTER = [-6.2088, 106.8456]; // [lat, lng]
+        renderAll();
+        listenToChanges();
+    }
+    
+    async function fetchCustomerProfile() {
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', localState.SIMULATED_CUSTOMER_ID).single();
+        if (error) console.error('Error fetching customer profile:', error);
+        else localState.customerProfile = data;
+    }
 
-        // --- Variabel Global ---
-        let map;
-        let pickupMarker, dropoffMarker;
-        let routeLayer;
-        let pickupCoords, dropoffCoords;
-        let selectedService = "Same Day";
-        let calculatedDistance = 0;
-        let calculatedPrice = 0;
-        let debounceTimer;
+    async function fetchDrivers() {
+        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'driver');
+        if (error) console.error('Error fetching drivers:', error);
+        else localState.drivers = data;
+    }
 
-        // --- Inisialisasi Peta Leaflet ---
-        function initMap() {
-            map = L.map('map').setView(JABODETABEK_CENTER, 10);
+    async function fetchOrders() {
+        const { data, error } = await supabase.from('orders').select('*, customer:profiles!customer_id(*), driver:profiles!driver_id(*)').order('created_at', { ascending: false });
+        if (error) console.error('Error fetching orders:', error);
+        else localState.orders = data;
+    }
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            
-            // Layer untuk menampung rute
-            routeLayer = L.layerGroup().addTo(map);
+    /**
+     * Merender semua komponen di halaman
+     */
+    function renderAll() {
+        renderCustomerPanel();
+        renderAdminPanel();
+        renderDriverSelector();
+        if(localState.drivers.length > 0) {
+            renderDriverPanel(localState.drivers[0].id);
+        }
+    }
+    
+    function renderCustomerPanel() {
+        const el = document.getElementById('customer-profile');
+        if (!localState.customerProfile) {
+            el.innerHTML = 'Gagal memuat profil. Pastikan UUID Pelanggan benar.';
+            return;
+        }
+        el.className = 'driver-card';
+        el.innerHTML = `
+            <h4>${localState.customerProfile.full_name}</h4>
+            <div style="font-size: 1.1rem; font-weight: 600; color: var(--success-color);">
+                Saldo: Rp ${localState.customerProfile.balance.toLocaleString('id-ID')}
+            </div>
+        `;
+    }
+
+    function renderAdminPanel() {
+        const driverListEl = document.getElementById('admin-driver-list');
+        driverListEl.innerHTML = '';
+        if (localState.drivers.length === 0) {
+            driverListEl.innerHTML = '<div class="loading">Belum ada driver terdaftar.</div>';
+        } else {
+            localState.drivers.forEach(driver => {
+                const card = document.createElement('div');
+                card.className = 'driver-card';
+                card.innerHTML = `
+                    <h4>${driver.full_name}</h4>
+                    <div>Status: <span class="status status-${driver.status}">${driver.status}</span></div>
+                    <div style="color: var(--success-color);">Saldo: Rp ${driver.balance.toLocaleString('id-ID')}</div>
+                    ${driver.status === 'pending' ? `<button class="btn btn-success btn-sm" style="margin-top:10px;" onclick="approveDriver('${driver.id}')">Setujui</button>` : ''}
+                `;
+                driverListEl.appendChild(card);
+            });
         }
 
-        // --- Ikon Kustom untuk Marker di Peta ---
-        const courierIcon = L.icon({
-            iconUrl: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzAwNzBmMCIgd2lkdGg9IjQ4cHgiIGhlaWdodD0iNDhweCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xOSAxM2gtMXYtMmgtMnYySDhhMiAyIDAgMCAwLTIgMiAyIDIgMCAwIDAgMiAyaDEwYTIgMiAwIDAgMCAyLTJ2LTJ6bS04LjUgM2ExLjUgMS41IDAgMSAxIDAgMyAxLjUgMS41IDAgMCAxIDAtM3ptNiAwYTEuNSAxLjUgMCAxIDEgMCAzIDEuNSAxLjUgMCAwIDEgMC0zem0tMy41LTdoMS4yN2wtMS40My00LjExYy0uMzUtMS0xLjMtMS42OS0yLjM0LTEuNjloLTIuMjljLTEuMTIgMC0yLjE4LjgtMi40OCAxLjg4bC0uODggMy4xM0g0di0ySDJ2MmMwIDEuMS45IDIgMiAyaDF2MWMyLjkyIDAgNS40NS0xLjY0IDYuODUtNC4xNEwxMy4xMiA5SDIxdjJoLTl6Ii8+PC9zdmc+',
-            iconSize: [40, 40],
-            iconAnchor: [20, 40],
-            popupAnchor: [0, -40]
+        const orderListEl = document.getElementById('admin-order-list');
+        orderListEl.innerHTML = '';
+        if (localState.orders.length === 0) {
+            orderListEl.innerHTML = '<div class="loading">Belum ada order masuk.</div>';
+        } else {
+            localState.orders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                let content = `
+                    <h4>Order #${order.id}</h4>
+                    <div>Pelanggan: ${order.customer ? order.customer.full_name : '...'}</div>
+                    <div>Status: <span class="status status-${order.status}">${order.status}</span></div>
+                `;
+                if (order.status === 'searching_driver') {
+                    let selectHtml = `<div class="form-group" style="margin-top:10px;">
+                        <select id="assign-driver-${order.id}">
+                            ${localState.drivers.filter(d => d.status === 'active').map(d => `<option value="${d.id}">${d.full_name}</option>`).join('')}
+                        </select>
+                    </div>`;
+                    content += selectHtml + `<button class="btn btn-secondary btn-sm" onclick="assignOrder(${order.id})">Tugaskan</button>`;
+                } else if(order.driver) {
+                    content += `<div>Driver: ${order.driver.full_name}</div>`;
+                }
+                card.innerHTML = content;
+                orderListEl.appendChild(card);
+            });
+        }
+    }
+    
+    function renderDriverSelector() {
+        const driverSelector = document.getElementById('driver-selector');
+        driverSelector.innerHTML = localState.drivers.map(d => `<option value="${d.id}">${d.full_name}</option>`).join('');
+    }
+
+    function renderDriverPanel(driverId) {
+        const driver = localState.drivers.find(d => d.id === driverId);
+        if (!driver) return;
+
+        document.getElementById('driver-profile-view').innerHTML = `
+            <div class="driver-card">
+                <h4>${driver.full_name}</h4>
+                <div>Status Akun: <span class="status status-${driver.status}">${driver.status}</span></div>
+                <div style="color: var(--success-color);">Saldo: Rp ${driver.balance.toLocaleString('id-ID')}</div>
+            </div>`;
+        
+        const taskListEl = document.getElementById('driver-task-list');
+        taskListEl.innerHTML = '';
+        const tasks = localState.orders.filter(o => o.driver_id === driverId && o.status !== 'completed' && o.status !== 'cancelled');
+        
+        if (tasks.length === 0) {
+            taskListEl.innerHTML = '<div class="loading">Tidak ada tugas saat ini.</div>';
+        } else {
+            tasks.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                let actionBtn = '';
+                if(order.status === 'assigned') actionBtn = `<button class="btn btn-primary btn-sm" onclick="updateOrderStatus(${order.id}, 'pickup')">Jemput Barang</button>`;
+                if(order.status === 'pickup') actionBtn = `<button class="btn btn-secondary btn-sm" onclick="updateOrderStatus(${order.id}, 'delivering')">Mulai Antar</button>`;
+                if(order.status === 'delivering') actionBtn = `<button class="btn btn-success btn-sm" onclick="updateOrderStatus(${order.id}, 'completed')">Selesaikan Order</button>`;
+
+                card.innerHTML = `
+                    <h4>Tugas Order #${order.id}</h4>
+                    <div>Pelanggan: ${order.customer.full_name}</div>
+                    <div>Status: <span class="status status-${order.status}">${order.status}</span></div>
+                    <div style="margin-top:10px;">${actionBtn}</div>
+                `;
+                taskListEl.appendChild(card);
+            });
+        }
+    }
+
+    /**
+     * Fungsi utama untuk mendengarkan perubahan di database secara REALTIME
+     */
+    function listenToChanges() {
+        supabase.channel('public-db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
+            console.log('Perubahan terdeteksi:', payload);
+            // Jika ada perubahan, ambil ulang semua data dan render ulang
+            // Ini cara sederhana, bisa dioptimalkan untuk hanya update data yg berubah
+            await Promise.all([fetchDrivers(), fetchOrders()]);
+            renderAdminPanel();
+            renderDriverPanel(document.getElementById('driver-selector').value);
+          })
+          .subscribe();
+    }
+
+
+    // ===================================================================================
+    // BAGIAN 4: LOGIKA BISNIS & AKSI PENGGUNA
+    // ===================================================================================
+
+    async function approveDriver(driverId) {
+        const { error } = await supabase.from('profiles').update({ status: 'active' }).eq('id', driverId);
+        if (error) alert('Gagal menyetujui driver: ' + error.message);
+    }
+
+    async function assignOrder(orderId) {
+        const driverId = document.getElementById(`assign-driver-${orderId}`).value;
+        if(!driverId) {
+            alert('Tidak ada driver aktif yang bisa ditugaskan.');
+            return;
+        }
+        const { error } = await supabase.from('orders').update({ driver_id: driverId, status: 'assigned' }).eq('id', orderId);
+        if (error) alert('Gagal menugaskan order: ' + error.message);
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+        const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+        if (error) {
+            alert('Gagal update status: ' + error.message);
+            return;
+        }
+
+        // Jika order selesai, lakukan transaksi penambahan saldo driver
+        if (newStatus === 'completed') {
+            const order = localState.orders.find(o => o.id === orderId);
+            const driverEarning = order.price * 0.8; // Komisi 80% untuk driver
+            
+            // Di aplikasi nyata, ini HARUS dilakukan di Supabase Edge Function untuk keamanan
+            const { data: driver, error: fetchError } = await supabase.from('profiles').select('balance').eq('id', order.driver_id).single();
+            if(fetchError) {
+                alert("Error mengambil data saldo driver."); return;
+            }
+            const newBalance = driver.balance + driverEarning;
+            const { error: updateError } = await supabase.from('profiles').update({ balance: newBalance }).eq('id', order.driver_id);
+            if (updateError) alert('PENTING: Order selesai tapi gagal update saldo driver. Hubungi admin.');
+            else alert(`Order Selesai! Saldo driver telah ditambahkan sebesar Rp ${driverEarning.toLocaleString('id-ID')}`);
+        }
+    }
+    
+    async function createOrder() {
+        if (!calculatedRoute) {
+            alert('Harap hitung biaya terlebih dahulu.'); return;
+        }
+        
+        document.getElementById('order-btn').disabled = true;
+        document.getElementById('order-btn').innerText = 'Memproses...';
+
+        const { error } = await supabase.from('orders').insert({
+            customer_id: localState.SIMULATED_CUSTOMER_ID,
+            pickup_address: calculatedRoute.pickup,
+            dropoff_address: calculatedRoute.dropoff,
+            pickup_coords: { "type": "Point", "coordinates": calculatedRoute.coords.pickup },
+            dropoff_coords: { "type": "Point", "coordinates": calculatedRoute.coords.dropoff },
+            price: calculatedRoute.price,
+            payment_method: 'SALDO' // Hardcoded untuk simulasi
         });
         
-        // --- Fungsi untuk mencari alamat (Autocomplete) ---
-        async function searchAddress(query, resultsContainerId) {
-            const resultsContainer = document.getElementById(resultsContainerId);
-            if (query.length < 3) {
-                resultsContainer.innerHTML = '';
-                resultsContainer.style.display = 'none';
+        if (error) {
+            alert('Gagal membuat order: ' + error.message);
+        } else {
+            alert('Order berhasil dibuat! Admin akan segera menugaskan driver.');
+            document.getElementById('pickup').value = '';
+            document.getElementById('dropoff').value = '';
+            document.getElementById('price-display').style.display = 'none';
+        }
+        document.getElementById('order-btn').disabled = false;
+        document.getElementById('order-btn').innerText = 'Order Sekarang';
+    }
+
+
+    // ===================================================================================
+    // BAGIAN 5: FUNGSI PETA & OPENROUTESERVICE
+    // ===================================================================================
+
+    async function calculateRoute() {
+        const pickupQuery = document.getElementById('pickup').value;
+        const dropoffQuery = document.getElementById('dropoff').value;
+
+        if (!pickupQuery || !dropoffQuery) {
+            alert('Lokasi jemput dan antar harus diisi.'); return;
+        }
+        if (ORS_API_KEY.includes('API_KEY')) {
+            alert('API Key OpenRouteService belum diatur.'); return;
+        }
+        
+        const btn = document.getElementById('calculate-btn');
+        btn.disabled = true;
+        btn.innerText = 'Menghitung...';
+
+        try {
+            // Geocoding untuk mendapatkan koordinat
+            const [pickupCoords, dropoffCoords] = await Promise.all([
+                geocodeAddress(pickupQuery),
+                geocodeAddress(dropoffQuery)
+            ]);
+
+            if (!pickupCoords || !dropoffCoords) {
+                alert('Satu atau kedua alamat tidak dapat ditemukan.');
                 return;
             }
-            if (ORS_API_KEY === "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1MGZhMjk5OTc1NjQxYzViMmYxMTI4OTMzZjc3NWE4IiwiaCI6Im11cm11cjY0In0=") {
-                 console.error("API Key OpenRouteService belum dimasukkan.");
-                 resultsContainer.innerHTML = '<div class="autocomplete-item">Error: API Key belum diatur.</div>';
-                 resultsContainer.style.display = 'block';
-                 return;
-            }
-
-            // Batas area pencarian di sekitar Jabodetabek
-            const focusPoint = { lon: JABODETABEK_CENTER[1], lat: JABODETABEK_CENTER[0] };
-            const boundary = {
-                lon_min: 106.3, lat_min: -6.8,
-                lon_max: 107.2, lat_max: -5.9
-            };
             
-            const url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&focus.point.lon=${focusPoint.lon}&focus.point.lat=${focusPoint.lat}&boundary.rect.min_lon=${boundary.lon_min}&boundary.rect.min_lat=${boundary.lat_min}&boundary.rect.max_lon=${boundary.lon_max}&boundary.rect.max_lat=${boundary.lat_max}`;
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                resultsContainer.innerHTML = '';
-                if (data.features && data.features.length > 0) {
-                    data.features.forEach(feature => {
-                        const item = document.createElement('div');
-                        item.classList.add('autocomplete-item');
-                        item.innerText = feature.properties.label;
-                        item.onclick = () => selectAddress(feature, resultsContainerId);
-                        resultsContainer.appendChild(item);
-                    });
-                    resultsContainer.style.display = 'block';
-                } else {
-                    resultsContainer.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error fetching address:', error);
-                resultsContainer.style.display = 'none';
-            }
-        }
-        
-        // --- Fungsi saat alamat dipilih dari daftar ---
-        function selectAddress(feature, resultsContainerId) {
-            const coords = feature.geometry.coordinates; // [lng, lat]
-            const latLng = [coords[1], coords[0]]; // Leaflet uses [lat, lng]
-            
-            if (resultsContainerId === 'pickup-results') {
-                document.getElementById('pickup').value = feature.properties.label;
-                pickupCoords = coords; // [lng, lat]
-                if (pickupMarker) {
-                    pickupMarker.setLatLng(latLng);
-                } else {
-                    pickupMarker = L.marker(latLng, { icon: courierIcon }).addTo(map).bindPopup("<b>Lokasi Jemput</b>");
-                }
-                map.panTo(latLng);
-            } else {
-                document.getElementById('dropoff').value = feature.properties.label;
-                dropoffCoords = coords; // [lng, lat]
-                 if (dropoffMarker) {
-                    dropoffMarker.setLatLng(latLng);
-                } else {
-                    dropoffMarker = L.marker(latLng, { icon: courierIcon }).addTo(map).bindPopup("<b>Lokasi Antar</b>");
-                }
-                map.panTo(latLng);
-            }
-            
-            document.getElementById(resultsContainerId).innerHTML = '';
-            document.getElementById(resultsContainerId).style.display = 'none';
-            
-            if (pickupCoords && dropoffCoords) {
-                calculateAndDisplayRoute();
-            }
-        }
-
-        // --- Fungsi Kalkulasi Rute dan Harga ---
-        async function calculateAndDisplayRoute() {
-            if (!pickupCoords || !dropoffCoords) return;
-
+            // Dapatkan rute dan jarak
             const url = 'https://api.openrouteservice.org/v2/directions/driving-car/geojson';
-            const body = {
-                "coordinates": [pickupCoords, dropoffCoords]
+            const body = JSON.stringify({ "coordinates": [pickupCoords, dropoffCoords] });
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json, application/geo+json',
+                    'Content-Type': 'application/json',
+                    'Authorization': ORS_API_KEY
+                },
+                body: body
+            });
+            const data = await response.json();
+            const routeSummary = data.features[0].properties.summary;
+            const distanceInKm = (routeSummary.distance / 1000);
+            
+            // Hitung harga
+            let price = distanceInKm * 2500; // Rp 2.500/km
+            if (price < 15000) price = 15000; // Harga minimum
+            price = Math.ceil(price / 1000) * 1000; // Pembulatan ke ribuan atas
+
+            // Tampilkan hasil
+            document.getElementById('distance').innerText = distanceInKm.toFixed(1) + ' km';
+            document.getElementById('price').innerText = 'Rp ' + price.toLocaleString('id-ID');
+            document.getElementById('price-display').style.display = 'block';
+            document.getElementById('order-btn').disabled = false;
+            
+            // Simpan data rute
+            calculatedRoute = {
+                pickup: pickupQuery,
+                dropoff: dropoffQuery,
+                coords: { pickup: pickupCoords, dropoff: dropoffCoords },
+                price: price
             };
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
-                        'Content-Type': 'application/json',
-                        'Authorization': ORS_API_KEY
-                    },
-                    body: JSON.stringify(body)
-                });
-                
-                const data = await response.json();
-                
-                if (data.features && data.features.length > 0) {
-                    const route = data.features[0];
-                    const summary = route.properties.summary;
-                    
-                    // Hapus rute lama
-                    routeLayer.clearLayers();
-                    
-                    // Tampilkan rute baru di peta
-                    const routeLine = L.geoJSON(route, {
-                        style: {
-                            color: '#FF69B4',
-                            weight: 5
-                        }
-                    }).addTo(routeLayer);
-
-                    map.fitBounds(routeLine.getBounds());
-
-                    // Update Jarak (summary.distance dalam meter)
-                    calculatedDistance = (summary.distance / 1000).toFixed(1);
-                    document.getElementById("distance").innerText = `${calculatedDistance} km`;
-                    
-                    // Update Harga
-                    let price = calculatedDistance * PRICE_PER_KM;
-                    if (price < MINIMUM_FEE) {
-                        price = MINIMUM_FEE;
-                    }
-                    calculatedPrice = Math.ceil(price / 1000) * 1000;
-                    
-                    document.getElementById("price").innerText = `Rp ${calculatedPrice.toLocaleString('id-ID')}`;
-                } else {
-                     window.alert("Rute tidak ditemukan. Pastikan alamat benar dan berada di area layanan.");
-                }
-
-            } catch (error) {
-                console.error("Error calculating route:", error);
-                window.alert("Terjadi kesalahan saat menghitung rute.");
-            }
+        } catch (error) {
+            console.error('Error calculating route:', error);
+            alert('Terjadi kesalahan saat menghitung rute.');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Hitung Biaya';
         }
-        
-        // --- Event Listener ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initMap();
-            
-            const pickupInput = document.getElementById('pickup');
-            const dropoffInput = document.getElementById('dropoff');
+    }
+    
+    async function geocodeAddress(query) {
+        const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&boundary.country=ID&size=1`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.features && data.features.length > 0) {
+                return data.features[0].geometry.coordinates; // [lng, lat]
+            }
+            return null;
+        } catch (error) {
+            console.error('Geocoding error:', error);
+            return null;
+        }
+    }
 
-            pickupInput.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => searchAddress(pickupInput.value, 'pickup-results'), 500);
-            });
-            
-            dropoffInput.addEventListener('input', () => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => searchAddress(dropoffInput.value, 'dropoff-results'), 500);
-            });
-            
-            // Klik di luar input untuk menyembunyikan hasil autocomplete
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.form-group')) {
-                    document.getElementById('pickup-results').style.display = 'none';
-                    document.getElementById('dropoff-results').style.display = 'none';
-                }
-            });
+    // ===================================================================================
+    // BAGIAN 6: INISIALISASI
+    // ===================================================================================
+    window.onload = () => {
+        map = L.map('map').setView(JABODETABEK_CENTER, 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-            // Tombol Layanan
-            const serviceButtons = document.querySelectorAll('.service-btn');
-            serviceButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    serviceButtons.forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
-                    selectedService = button.getAttribute('data-service');
-                });
-            });
+        document.getElementById('calculate-btn').addEventListener('click', calculateRoute);
+        document.getElementById('order-btn').addEventListener('click', createOrder);
 
-            // Tombol Order via WhatsApp
-            document.getElementById('order-btn').addEventListener('click', () => {
-                const pickupLocation = document.getElementById('pickup').value;
-                const dropoffLocation = document.getElementById('dropoff').value;
-
-                if (!pickupLocation || !dropoffLocation || calculatedPrice === 0) {
-                    alert("Harap isi lokasi penjemputan, pengantaran, dan pastikan harga sudah terkalkulasi.");
-                    return;
-                }
-
-                const message = `
-*--- PESANAN BARU ---*
-*Nabila Logistik & Delivery*
-
-*Layanan:* ${selectedService}
-*Lokasi Jemput:* ${pickupLocation}
-*Lokasi Antar:* ${dropoffLocation}
-*Estimasi Jarak:* ${calculatedDistance} km
-*Estimasi Biaya:* Rp ${calculatedPrice.toLocaleString('id-ID')}
-
-Halo Admin, saya ingin melakukan pesanan sesuai detail di atas. Mohon konfirmasinya. Terima kasih.
-                `;
-                
-                const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message.trim())}`;
-                window.open(whatsappURL, '_blank');
-            });
-
-            // Tombol Daftar Driver
-            document.getElementById('register-driver-btn').addEventListener('click', () => {
-                const message = `
-Halo Admin Nabila Logistik,
-
-Saya tertarik untuk bergabung menjadi mitra driver. Mohon informasinya mengenai langkah-langkah pendaftaran selanjutnya.
-
-Terima kasih.
-                `;
-                const whatsappURL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message.trim())}`;
-                window.open(whatsappURL, '_blank');
-            });
-        });
+        initializeApp();
+    };
 
     </script>
 </body>
