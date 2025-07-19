@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Platform Nabila Logistik (Supabase Backend)</title>
+    <title>Platform Nabila Logistik (NHost Backend)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Ganti Supabase dengan NHost SDK -->
+    <script src="https://unpkg.com/@nhost/nhost-js@3/dist/index.umd.js"></script>
 
     <style>
         :root {
@@ -52,11 +53,11 @@
 
     <div class="container">
         <div style="text-align: center; margin-bottom: 25px;">
-            <h1>Nabila Logistik - Platform Management (Live Backend)</h1>
+            <h1>Nabila Logistik - Platform Management (Live NHost Backend)</h1>
         </div>
 
         <div id="config-alert">
-            <strong>PENTING:</strong> Pastikan Anda telah memasukkan URL Supabase, Kunci Anon, dan Kunci API OpenRouteService di dalam tag <script> di bawah.
+            <strong>PENTING:</strong> Pastikan Anda telah memasukkan URL Backend NHost dan Kunci API OpenRouteService di dalam tag <script> di bawah.
         </div>
 
         <div class="platform-grid">
@@ -112,22 +113,22 @@
         </div>
     </div>
 
-    <!-- SCRIPT LENGKAP DAN SUDAH DIPERBAIKI -->
+    <!-- SCRIPT LENGKAP DAN SUDAH DIPERBAIKI UNTUK NHOST -->
     <script>
     // ===================================================================================
-    // BAGIAN 1: KONFIGURASI & KONEKSI SUPABASE
+    // BAGIAN 1: KONFIGURASI & KONEKSI NHOST
     // ===================================================================================
-    const SUPABASE_URL = 'https://lvbcwilldsfxkweqfpyz.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2YmN3aWxsZHNmeGt3ZXFmcHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzE2NjgsImV4cCI6MjA2NzMwNzY2OH0.-O_ddTcVKkS3xJDi5wQRoHIlpE5d3uAraXGXaZ62v98';
-    const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1MGZhMjk5OTc1NjQxYzViMmYxMTI4OTMzZjc3NWE4IiwiaCI6Im11cm11cjY0In0=';
+    // MASUKKAN URL BACKEND NHOST ANDA DI SINI
+    const NHOST_BACKEND_URL = 'https://your-nhost-project-url.nhost.app';
+    const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1MGZhMjk5OTc1NjQxYzViMmYxMTI4OTMzZjc3NWE4IiwiaCI6Im11cm11cjY0In0='; // MASUKKAN API KEY ANDA
     const JABODETABEK_CENTER = [-6.2088, 106.8456];
 
-    let supabase;
+    let nhost;
     try {
-        if (SUPABASE_URL.includes('https://lvbcwilldsfxkweqfpyz.supabase.co') || SUPABASE_ANON_KEY.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2YmN3aWxsZHNmeGt3ZXFmcHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MzE2NjgsImV4cCI6MjA2NzMwNzY2OH0.-O_ddTcVKkS3xJDi5wQRoHIlpE5d3uAraXGXaZ62v98')) {
-            throw new Error("Anda belum memasukkan URL Supabase dan Kunci Anon di dalam file HTML.");
+        if (NHOST_BACKEND_URL.includes('your-nhost-project-url')) {
+            throw new Error("Anda belum memasukkan URL Backend NHost di dalam file HTML.");
         }
-        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        nhost = new nhostJs.NhostClient({ backendUrl: NHOST_BACKEND_URL });
         document.getElementById('config-alert').style.display = 'none';
     } catch (error) {
         document.getElementById('config-alert').innerHTML = `<strong>KESALAHAN KONFIGURASI:</strong> ${error.message}`;
@@ -137,36 +138,82 @@
     let localState = { orders: [], drivers: [], customerProfile: null, SIMULATED_CUSTOMER_ID: null };
     let calculatedRoute = null; 
     let map, mapLayers = { markers: {}, routes: {} };
+    let subscription; // Variabel untuk menyimpan langganan realtime
 
     // ===================================================================================
-    // BAGIAN 2: FUNGSI UTAMA (FETCH, RENDER, REALTIME)
+    // BAGIAN 2: FUNGSI UTAMA (FETCH, RENDER, REALTIME) DENGAN NHOST
     // ===================================================================================
     async function initializeApp() {
-        if (!supabase) { console.error("Inisialisasi dibatalkan: Supabase tidak terkonfigurasi."); return; }
+        if (!nhost) { console.error("Inisialisasi dibatalkan: NHost tidak terkonfigurasi."); return; }
         document.querySelectorAll('.loading').forEach(el => el.style.display = 'block');
+        // NHost SDK v3 secara otomatis me-refresh token
+        await nhost.auth.isAuthenticatedAsync(); 
         await Promise.all([ fetchAndSetCustomer(), fetchDrivers(), fetchOrders() ]);
         renderAll();
         listenToChanges();
     }
-    
+
+    // Menggunakan GraphQL untuk mengambil data
     async function fetchAndSetCustomer() {
-        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'customer').limit(1).single();
-        if (error || !data) {
-            console.error('Gagal memuat profil pelanggan. Pastikan ada user dengan peran "customer" di tabel "profiles".', error);
+        const GET_CUSTOMER_QUERY = `
+            query GetCustomer {
+              profiles(where: {role: {_eq: "customer"}}, limit: 1) {
+                id
+                full_name
+                balance
+                role
+              }
+            }
+        `;
+        const { data, error } = await nhost.graphql.request(GET_CUSTOMER_QUERY);
+        if (error || !data.profiles[0]) {
+            console.error('Gagal memuat profil pelanggan. Pastikan ada user dengan peran "customer".', error);
         } else {
-            localState.customerProfile = data;
-            localState.SIMULATED_CUSTOMER_ID = data.id;
+            localState.customerProfile = data.profiles[0];
+            localState.SIMULATED_CUSTOMER_ID = data.profiles[0].id;
         }
     }
 
     async function fetchDrivers() {
-        const { data, error } = await supabase.from('profiles').select('*').eq('role', 'driver').order('full_name');
-        if (error) console.error('Gagal memuat driver:', error); else localState.drivers = data;
+        const GET_DRIVERS_QUERY = `
+            query GetDrivers {
+              profiles(where: {role: {_eq: "driver"}}, order_by: {full_name: asc}) {
+                id
+                full_name
+                balance
+                status
+              }
+            }
+        `;
+        const { data, error } = await nhost.graphql.request(GET_DRIVERS_QUERY);
+        if (error) console.error('Gagal memuat driver:', error); else localState.drivers = data.profiles;
     }
 
     async function fetchOrders() {
-        const { data, error } = await supabase.from('orders').select('*, customer:profiles!customer_id(full_name), driver:profiles!driver_id(full_name)').order('created_at', { ascending: false });
-        if (error) console.error('Gagal memuat order:', error); else localState.orders = data;
+        const GET_ORDERS_QUERY = `
+            query GetOrders {
+              orders(order_by: {created_at: desc}) {
+                id
+                created_at
+                status
+                price
+                driver_id
+                customer_id
+                pickup_address
+                dropoff_address
+                pickup_coords
+                dropoff_coords
+                customer {
+                  full_name
+                }
+                driver {
+                  full_name
+                }
+              }
+            }
+        `;
+        const { data, error } = await nhost.graphql.request(GET_ORDERS_QUERY);
+        if (error) console.error('Gagal memuat order:', error); else localState.orders = data.orders;
     }
 
     function renderAll() {
@@ -232,84 +279,158 @@
     }
 
     function listenToChanges() {
-        supabase.channel('public-db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public' }, async (payload) => {
-            console.log('Perubahan terdeteksi:', payload);
-            await Promise.all([fetchAndSetCustomer(), fetchDrivers(), fetchOrders()]);
-            renderAll();
-          })
-          .subscribe();
+        if (subscription) {
+            subscription.unsubscribe(); // Hentikan langganan lama jika ada
+        }
+        // NHost menggunakan GraphQL Subscriptions
+        const ALL_DATA_SUBSCRIPTION = `
+            subscription AllDataSubscription {
+              profiles { id full_name balance status role }
+              orders(order_by: {created_at: desc}) {
+                id created_at status price driver_id customer_id
+                pickup_address dropoff_address pickup_coords dropoff_coords
+                customer { full_name }
+                driver { full_name }
+              }
+            }
+        `;
+        subscription = nhost.graphql.subscribe({ query: ALL_DATA_SUBSCRIPTION }).subscribe({
+            next: (response) => {
+                if (response.error) {
+                    console.error('Subscription error:', response.error);
+                    return;
+                }
+                console.log('Perubahan terdeteksi:', response.data);
+                // Update local state dengan data baru dari subscription
+                localState.drivers = response.data.profiles.filter(p => p.role === 'driver');
+                localState.customerProfile = response.data.profiles.find(p => p.role === 'customer');
+                localState.orders = response.data.orders;
+                renderAll();
+            },
+            error: (err) => console.error('Subscription failed:', err),
+        });
     }
 
     // ===================================================================================
-    // BAGIAN 3: LOGIKA BISNIS & AKSI PENGGUNA
+    // BAGIAN 3: LOGIKA BISNIS & AKSI PENGGUNA DENGAN NHOST
     // ===================================================================================
     async function approveDriver(driverId) {
-        const { error } = await supabase.from('profiles').update({ status: 'active' }).eq('id', driverId);
+        const UPDATE_DRIVER_STATUS = `
+            mutation UpdateDriverStatus($driverId: uuid!, $status: String!) {
+              update_profiles_by_pk(pk_columns: {id: $driverId}, _set: {status: $status}) {
+                id
+              }
+            }
+        `;
+        const { error } = await nhost.graphql.request(UPDATE_DRIVER_STATUS, { driverId, status: 'active' });
         if (error) alert('Gagal menyetujui driver: ' + error.message);
     }
+
     async function assignOrder(orderId) {
         const driverId = document.getElementById(`assign-driver-${orderId}`).value;
         if(!driverId) { alert('Tidak ada driver aktif.'); return; }
-        const { error } = await supabase.from('orders').update({ driver_id: driverId, status: 'assigned' }).eq('id', orderId);
-        if (error) alert('Gagal menugaskan order: ' + error.message);
+        const ASSIGN_ORDER_MUTATION = `
+            mutation AssignOrder($orderId: Int!, $driverId: uuid!, $status: String!) {
+              update_orders_by_pk(pk_columns: {id: $orderId}, _set: {driver_id: $driverId, status: $status}) {
+                id
+              }
+            }
+        `;
+        const { error } = await nhost.graphql.request(ASSIGN_ORDER_MUTATION, { orderId, driverId, status: 'assigned' });
+        if (error) alert('Gagal menugaskan order: ' + JSON.stringify(error));
     }
+    
     async function updateOrderStatus(orderId, newStatus) {
-        const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-        if (error) { alert('Gagal update status: ' + error.message); return; }
+        const UPDATE_ORDER_STATUS = `
+            mutation UpdateOrderStatus($orderId: Int!, $status: String!) {
+              update_orders_by_pk(pk_columns: {id: $orderId}, _set: {status: $status}) {
+                id
+              }
+            }
+        `;
+        const { error } = await nhost.graphql.request(UPDATE_ORDER_STATUS, { orderId, status: newStatus });
+        if (error) { alert('Gagal update status: ' + JSON.stringify(error)); return; }
+        
         if (newStatus === 'completed') {
             const order = localState.orders.find(o => o.id === orderId);
             const driverEarning = order.price * 0.8;
-            const { data: driver, error: fetchError } = await supabase.from('profiles').select('balance').eq('id', order.driver_id).single();
-            if(fetchError){ alert("Error ambil saldo driver."); return; }
+            const driver = localState.drivers.find(d => d.id === order.driver_id);
+            if(!driver) { alert("Error data driver tidak ditemukan."); return; }
+            
             const newBalance = Number(driver.balance) + driverEarning;
-            const { error: updateError } = await supabase.from('profiles').update({ balance: newBalance }).eq('id', order.driver_id);
+            
+            const UPDATE_DRIVER_BALANCE = `
+                mutation UpdateDriverBalance($driverId: uuid!, $balance: numeric!) {
+                  update_profiles_by_pk(pk_columns: {id: $driverId}, _set: {balance: $balance}) {
+                    id
+                  }
+                }
+            `;
+            const { error: updateError } = await nhost.graphql.request(UPDATE_DRIVER_BALANCE, { driverId: order.driver_id, balance: newBalance });
             if (updateError) alert('Gagal update saldo driver.'); else alert(`Order Selesai! Saldo driver bertambah Rp ${driverEarning.toLocaleString('id-ID')}`);
         }
     }
+
     async function createOrder() {
         if (!calculatedRoute || !localState.SIMULATED_CUSTOMER_ID) { alert('Hitung biaya dulu atau data pelanggan tidak ditemukan.'); return; }
         const btn = document.getElementById('order-btn');
         btn.disabled = true; btn.innerText = 'Memproses...';
-        const { error } = await supabase.from('orders').insert({
+        
+        const CREATE_ORDER_MUTATION = `
+            mutation CreateOrder($order: orders_insert_input!) {
+              insert_orders_one(object: $order) {
+                id
+              }
+            }
+        `;
+        const orderObject = {
             customer_id: localState.SIMULATED_CUSTOMER_ID,
             pickup_address: calculatedRoute.pickup,
             dropoff_address: calculatedRoute.dropoff,
-            pickup_coords: calculatedRoute.coords.pickup,
-            dropoff_coords: calculatedRoute.coords.dropoff,
+            pickup_coords: `(${calculatedRoute.coords.pickup[0]},${calculatedRoute.coords.pickup[1]})`,
+            dropoff_coords: `(${calculatedRoute.coords.dropoff[0]},${calculatedRoute.coords.dropoff[1]})`,
             price: calculatedRoute.price,
-            payment_method: 'SALDO'
-        });
-        if (error) { alert('Gagal membuat order: ' + error.message); } 
-        else {
+            payment_method: 'SALDO',
+            status: 'searching_driver' // Status awal
+        };
+        
+        const { error } = await nhost.graphql.request(CREATE_ORDER_MUTATION, { order: orderObject });
+        
+        if (error) { 
+            alert('Gagal membuat order: ' + JSON.stringify(error)); 
+        } else {
             alert('Order berhasil dibuat!');
             document.getElementById('pickup').value = ''; document.getElementById('dropoff').value = '';
             document.getElementById('price-display').style.display = 'none';
             calculatedRoute = null;
         }
         btn.disabled = false; btn.innerText = 'Order Sekarang';
+        btn.disabled = true; // Nonaktifkan kembali setelah order
     }
 
     // ===================================================================================
-    // BAGIAN 4: FUNGSI PETA & OPENROUTESERVICE
+    // BAGIAN 4: FUNGSI PETA & OPENROUTESERVICE (Tidak ada perubahan)
     // ===================================================================================
     function updateMap() {
-        // Hapus semua layer lama
         Object.values(mapLayers.markers).forEach(marker => marker.remove());
         Object.values(mapLayers.routes).forEach(route => route.remove());
         mapLayers = { markers: {}, routes: {} };
 
-        // Gambar ulang order yang aktif
         localState.orders.filter(o => o.status !== 'completed' && o.status !== 'cancelled' && o.pickup_coords && o.dropoff_coords)
         .forEach(order => {
-            const pickupLatLng = L.latLng(order.pickup_coords[1], order.pickup_coords[0]);
-            const dropoffLatLng = L.latLng(order.dropoff_coords[1], order.dropoff_coords[0]);
+            // NHost mungkin mengembalikan koordinat sebagai string, perlu di-parse
+            const parseCoords = (coords) => {
+                if (Array.isArray(coords)) return [coords[1], coords[0]]; // Format sudah benar (Leaflet butuh [lat, lng])
+                const cleaned = coords.replace(/[()]/g, '').split(',');
+                return [parseFloat(cleaned[1]), parseFloat(cleaned[0])];
+            };
+
+            const pickupLatLng = L.latLng(parseCoords(order.pickup_coords));
+            const dropoffLatLng = L.latLng(parseCoords(order.dropoff_coords));
             
-            // Tambah marker jemput dan antar
             mapLayers.markers[`pickup-${order.id}`] = L.marker(pickupLatLng).addTo(map).bindPopup(`Jemput Order #${order.id}`);
             mapLayers.markers[`dropoff-${order.id}`] = L.marker(dropoffLatLng).addTo(map).bindPopup(`Antar Order #${order.id}`);
             
-            // Jika order sudah diantar, gambar rute
             if (['pickup', 'delivering', 'assigned'].includes(order.status) && order.driver_id) {
                 mapLayers.routes[order.id] = L.polyline([pickupLatLng, dropoffLatLng], { color: 'blue', weight: 5 }).addTo(map);
             }
@@ -320,7 +441,7 @@
         const pickupQuery = document.getElementById('pickup').value;
         const dropoffQuery = document.getElementById('dropoff').value;
         if (!pickupQuery || !dropoffQuery) { alert('Lokasi jemput dan antar harus diisi.'); return; }
-        if (ORS_API_KEY.includes('MASUKKAN')) { alert('API Key OpenRouteService belum diatur.'); return; }
+        if (ORS_API_KEY.includes('YOUR_OPENROUTESERVICE_API_KEY')) { alert('API Key OpenRouteService belum diatur.'); return; }
         
         const btn = document.getElementById('calculate-btn');
         btn.disabled = true; btn.innerText = 'Menghitung...';
@@ -333,6 +454,7 @@
                 headers: { 'Accept': 'application/json, application/geo+json', 'Content-Type': 'application/json', 'Authorization': ORS_API_KEY },
                 body: JSON.stringify({ "coordinates": [pickupCoords, dropoffCoords] })
             });
+            if (!response.ok) throw new Error(`ORS responded with ${response.status}`);
             const data = await response.json();
             const routeSummary = data.features[0].properties.summary;
             const distanceInKm = (routeSummary.distance / 1000);
